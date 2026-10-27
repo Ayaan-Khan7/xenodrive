@@ -1,18 +1,25 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock } from 'lucide-react';
 import {Input} from '../components/ui/Input';
 import {Button} from '../components/ui/Button';
+import { useApp } from '../context/appcontext';
 const Login = ({mode ="login"}) => {
     const isRegister = mode === "register";
     const navigate = useNavigate();
+    const {login,register} = useApp();
 
     const [form,setForm]=useState({name:"",email:"",password:""})
     const [isLoading,setIsLoading]=useState(false);
     const updateField=(key,value)=>setForm((prev)=>({...prev,[key]:value}));
 
     const handleSubmit=async(e)=>{
-
+        e.preventDefault();
+        setIsLoading(true);
+        const ok=isRegister? await register(form.name,form.email,form.password):
+        await login(form.email,form.password);
+        setIsLoading(false);
+        if(ok) navigate("/");
     }
 
 
@@ -48,7 +55,7 @@ const Login = ({mode ="login"}) => {
                         <Input
                         label="Full Name"
                         icon={User}
-                        placeholder="xenos"
+                        placeholder="Enter your full name" 
                         value={form.name}
                         onChange={(e) => updateField("name", e.target.value)}
                         required
@@ -85,7 +92,15 @@ const Login = ({mode ="login"}) => {
                         </Button>
 
                 </form>
-
+                <div className="text-center text-sm text-zinc-600">
+                    {isRegister ? "Already have an account? " : "Don't have an account? "}
+                    <Link
+                        to={isRegister ? "/login" : "/register"}
+                        className="font-medium text-orange-600 hover:text-orange-700 hover:underline"
+                    >
+                        {isRegister ? "Sign in" : "Create an account"}
+                    </Link>
+                </div>
 
             </div>
         </div>
