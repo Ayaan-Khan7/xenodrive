@@ -75,7 +75,7 @@ const Login = ({mode ="login"}) => {
 
                           <Input
                         label="Password"
-                        type="Password"
+                        type="password"
                         icon={Lock}
                         placeholder="••••••••"
             
