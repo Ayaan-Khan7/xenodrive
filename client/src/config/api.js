@@ -24,8 +24,9 @@ const getSamplePreviewUrl = (file) => {
     return "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
 };
 
-// In-memory state initialized from assets.jsx (resets automatically on page reload)
-let currentUser = { ...dummyUser };
+// In-memory state resets automatically on page reload in frontend-only mode.
+let currentUser = null;
+let mockAccount = null;
 let currentFolders = dummyFolders.map((f) => ({ ...f, path: [...(f.path || [])] }));
 let currentFiles = dummyFiles.map((f) => ({ ...f }));
 let currentShares = dummyShareLinks.map((s) => ({ ...s }));
@@ -50,8 +51,8 @@ const saveShares = (shares) => {
     currentShares = shares;
 };
 
-// Setup Mock API adapter on Axios
-api.defaults.adapter = async (config) => {
+// Setup the mock adapter only for frontend-only mode.
+const mockAdapter = async (config) => {
     // Simulate natural 150ms network latency
     await new Promise((resolve) => setTimeout(resolve, 150));
 
@@ -91,27 +92,34 @@ api.defaults.adapter = async (config) => {
             responseData = { error: "Unauthorized" };
         }
     } else if (pathname === "/api/auth/login" && method === "post") {
-        const user = {
-            id: "usr_1001",
-            name: body.email?.split("@")[0] || "User",
-            email: body.email || "alex.morgan@example.com",
-            storage_used: 423685120,
-            storage_limit: 1073741824,
-            created_at: new Date().toISOString(),
-        };
-        saveUser(user);
-        responseData = { user, token: "dummy_jwt_token_sample" };
+        const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+        if (mockAccount && email === mockAccount.email && body.password === mockAccount.password) {
+            saveUser(mockAccount.user);
+            responseData = { user: mockAccount.user, token: "dummy_jwt_token_sample" };
+        } else {
+            status = 401;
+            responseData = { error: "Invalid email or password" };
+        }
     } else if (pathname === "/api/auth/register" && method === "post") {
-        const user = {
-            id: `usr_${Date.now()}`,
-            name: body.name || "User",
-            email: body.email || "user@example.com",
-            storage_used: 0,
-            storage_limit: 1073741824,
-            created_at: new Date().toISOString(),
-        };
-        saveUser(user);
-        responseData = { user, token: "dummy_jwt_token_sample" };
+        const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+        const password = typeof body.password === "string" ? body.password : "";
+        const name = typeof body.name === "string" ? body.name.trim() : "";
+        if (!email || !password || !name) {
+            status = 400;
+            responseData = { error: "Name, email, and password are required" };
+        } else {
+            const user = {
+                id: `usr_${Date.now()}`,
+                name,
+                email,
+                storage_used: 0,
+                storage_limit: 1073741824,
+                created_at: new Date().toISOString(),
+            };
+            mockAccount = { email, password, user };
+            saveUser(user);
+            responseData = { user, token: "dummy_jwt_token_sample" };
+        }
     } else if (pathname === "/api/auth/logout" && method === "post") {
         saveUser(null);
         responseData = { message: "Logged out successfully" };
@@ -590,5 +598,9 @@ api.defaults.adapter = async (config) => {
         config,
     };
 };
+
+if (!import.meta.env.VITE_BASE_URL) {
+    api.defaults.adapter = mockAdapter;
+}
 
 export default api;
