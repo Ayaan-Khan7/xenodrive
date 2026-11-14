@@ -11,8 +11,9 @@ export const AppProvider = ({ children }) => {
     const refreshUser=useCallback(async()=>{
         try{
             const {data}=await api.get("/api/auth/me");
-            setUser(data.user)
-            return data.user
+            const currentUser = data?.user || data?.data?.user || null;
+            setUser(currentUser);
+            return currentUser;
         }catch(error){
             setUser(null)
             return null
@@ -26,7 +27,8 @@ export const AppProvider = ({ children }) => {
     const authAction =async (requestFn,successMsg,errorFallback)=>{
         try{
             const{data}=await requestFn();
-            setUser(data.user)
+            const currentUser = data?.user || data?.data?.user || null;
+            setUser(currentUser);
             if (successMsg) toast.success(successMsg)
                 return true;
         } catch (error) {
@@ -51,9 +53,26 @@ export const AppProvider = ({ children }) => {
             toast.error(getErrMsg(error,"Logout failed"));
         }
     }
+    const forgotPassword = async (email) => {
+        try {
+            const { data } = await api.post("/api/auth/forgot-password", { email });
+            toast.success(data?.message || "Password reset link sent to your email");
+            return data;
+        } catch (error) {
+            toast.error(getErrMsg(error, "Failed to send reset link"));
+            return false;
+        }
+    };
+    const resetPassword = async (token, password) => {
+        return authAction(
+            () => api.post(`/api/auth/reset-password/${token}`, { password }),
+            "Password reset successful",
+            "Failed to reset password"
+        );
+    };
     
     const value={
-        user,setUser,login,register,logout,refreshUser, isLoading,isAuthenticated:!!user
+        user,setUser,login,register,logout,refreshUser,forgotPassword,resetPassword, isLoading,isAuthenticated:!!user
     }
     return (
         <AppContext.Provider value={value}>
