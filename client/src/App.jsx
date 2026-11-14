@@ -16,8 +16,10 @@ const App = () => {
     <Routes>
       <Route path='/login' element={<Login mode="login"/>}/>
       <Route path='/register' element={<Login mode="register"/>}/>
+      <Route path='/forgot-password' element={<Login mode="forgot"/>}/>
+      <Route path='/reset-password/:token' element={<Login mode="reset"/>}/>
       <Route path='/s/:token' element={<SharedFile/>}/>
-      {/* Private Routes jo auth mai banaya hai*/}
+      {/* Private Routes */}
       <Route element={<ProtectedRoute/>}>
         <Route element={<DashboardLayout/>}>
           <Route path='/' element={<Drive/>}/>

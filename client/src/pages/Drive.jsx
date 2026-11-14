@@ -125,23 +125,81 @@ const Drive = () => {
     setSearchInput("");
   };
 
-  /* ───── upload via drag-and-drop ───── */
+  /* ───── compute SHA-256 for duplicate detection ───── */
+  const computeSHA256 = async (file) => {
+    try {
+      const buffer = await file.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    } catch {
+      return null;
+    }
+  };
+
+  /* ───── direct browser-to-R2 upload via presigned URLs ───── */
   const onDrop = useCallback(
     async (acceptedFiles) => {
       if (acceptedFiles.length === 0) return;
       setIsUploading(true);
+      let uploadedCount = 0;
+
       try {
-        const formData = new FormData();
-        formData.append("folder_id", currentFolderId || "");
-        acceptedFiles.forEach((f) => formData.append("files", f));
-        await api.post("/api/files/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        toast.success(`${acceptedFiles.length} file(s) uploaded`);
-        await fetchContents();
-        refreshUser?.();
-      } catch {
-        toast.error("Upload failed");
+        for (const file of acceptedFiles) {
+          // 1. Calculate SHA-256 checksum for duplicate detection
+          const checksum = await computeSHA256(file);
+
+          // 2. Request presigned upload URL from backend
+          const { data: resData } = await api.post("/api/files/request-upload-url", {
+            name: file.name,
+            size: file.size,
+            mime_type: file.type || "application/octet-stream",
+            folder_id: currentFolderId || null,
+            checksum_sha256: checksum,
+          });
+
+          // Check if identical duplicate was detected
+          if (resData.is_duplicate) {
+            toast.error(`Duplicate file detected: "${file.name}"`);
+            continue;
+          }
+
+          const payload = resData.data || resData;
+          const { uploadUrl, storage_key } = payload;
+
+          // 3. Upload directly to Cloudflare R2 using presigned PUT URL
+          const r2Response = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: {
+              "Content-Type": file.type || "application/octet-stream",
+            },
+            body: file,
+          });
+
+          if (!r2Response.ok) {
+            throw new Error(`Failed to upload ${file.name} to cloud storage`);
+          }
+
+          // 4. Confirm upload with backend to verify object in R2 and save MongoDB record
+          await api.post("/api/files/confirm-upload", {
+            storage_key,
+            name: file.name,
+            size: file.size,
+            mime_type: file.type || "application/octet-stream",
+            folder_id: currentFolderId || null,
+            checksum_sha256: checksum,
+          });
+
+          uploadedCount++;
+        }
+
+        if (uploadedCount > 0) {
+          toast.success(`${uploadedCount} file(s) uploaded successfully`);
+          await fetchContents();
+          refreshUser?.();
+        }
+      } catch (err) {
+        toast.error(err?.response?.data?.error || err.message || "Upload failed");
       } finally {
         setIsUploading(false);
       }

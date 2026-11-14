@@ -1,0 +1,37 @@
+{
+  "name": "xenodrive-backend",
+  "version": "1.0.0",
+  "description": "Backend foundation for CloudVault (xenoDrive)",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node test-server.js && node test-auth.js",
+    "test:r2": "node test-r2.js",
+    "configure:cors": "node scripts/configureCors.js"
+  },
+  "keywords": [
+    "cloudvault",
+    "xenodrive",
+    "express",
+    "mongodb",
+    "mongoose"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1164.0",
+    "@aws-sdk/s3-request-presigner": "^3.1164.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.12.0",
+    "multer": "^2.5.0"
+  }
+}
