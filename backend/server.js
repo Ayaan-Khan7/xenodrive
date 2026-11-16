@@ -25,6 +25,9 @@ process.on("uncaughtException", (err) => {
 // Initialize Express application
 const app = express();
 
+// Trust reverse proxy (Render, Vercel, Nginx, Cloudflare) for accurate client IP & HTTPS detection
+app.set("trust proxy", 1);
+
 // 1. Security Headers via Helmet
 app.use(helmet());
 

@@ -25,7 +25,6 @@ const fileSchema = new mongoose.Schema(
     storage_key: {
       type: String,
       required: [true, "Storage key is required"],
-      unique: true,
       index: true,
     },
     checksum_sha256: {
@@ -54,6 +53,15 @@ const fileSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    version: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+    extracted_text: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
@@ -75,6 +83,10 @@ const fileSchema = new mongoose.Schema(
 fileSchema.index({ owner_id: 1, folder_id: 1, is_trashed: 1 });
 // Compound index for duplicate detection: owner + checksum + is_trashed
 fileSchema.index({ owner_id: 1, checksum_sha256: 1, is_trashed: 1 });
+// Compound index for largest files query: owner + is_trashed + size
+fileSchema.index({ owner_id: 1, is_trashed: 1, size: -1 });
+// Compound text index for document search
+fileSchema.index({ name: "text", extracted_text: "text" });
 
 const File = mongoose.model("File", fileSchema);
 

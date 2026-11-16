@@ -14,11 +14,17 @@ export const corsOptions = {
     // Allow requests with no origin (e.g. mobile apps, curl, Postman, server-to-server)
     if (!origin) return callback(null, true);
 
+    // Allow explicitly specified origins or wildcard
     if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Origin '${origin}' not allowed by CORS policy`));
+      return callback(null, true);
     }
+
+    // In production, allow all Vercel deployments (production domain and preview branches)
+    if (env.isProduction && (origin.endsWith(".vercel.app") || origin.includes("vercel.app"))) {
+      return callback(null, true);
+    }
+
+    callback(new Error(`Origin '${origin}' not allowed by CORS policy`));
   },
   credentials: true, // Allow cookies and authorization headers across origins
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

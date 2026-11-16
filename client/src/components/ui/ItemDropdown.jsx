@@ -1,7 +1,25 @@
-import { MoreVerticalIcon, EyeIcon, Share2Icon, Edit2Icon, FolderInputIcon, Trash2Icon } from "lucide-react";
+import {
+    MoreVerticalIcon,
+    EyeIcon,
+    DownloadIcon,
+    Share2Icon,
+    HistoryIcon,
+    Edit2Icon,
+    FolderInputIcon,
+    Trash2Icon,
+} from "lucide-react";
 import { Dropdown, DropdownItem } from "./Dropdown";
 
-export function ItemDropdown({ item, onPreview, onShare, onRename, onMove, onDelete }) {
+export function ItemDropdown({
+    item,
+    onPreview,
+    onDownload,
+    onShare,
+    onVersionHistory,
+    onRename,
+    onMove,
+    onDelete,
+}) {
     return (
         <div onClick={(e) => e.stopPropagation()}>
             <Dropdown
@@ -19,9 +37,19 @@ export function ItemDropdown({ item, onPreview, onShare, onRename, onMove, onDel
                         Preview
                     </DropdownItem>
                 )}
+                {onDownload && (
+                    <DropdownItem icon={DownloadIcon} onClick={() => onDownload(item)}>
+                        Download
+                    </DropdownItem>
+                )}
                 <DropdownItem icon={Share2Icon} onClick={() => onShare(item)}>
                     Share Link
                 </DropdownItem>
+                {onVersionHistory && (
+                    <DropdownItem icon={HistoryIcon} onClick={() => onVersionHistory(item)}>
+                        Version History
+                    </DropdownItem>
+                )}
                 <DropdownItem icon={Edit2Icon} onClick={() => onRename(item)}>
                     Rename
                 </DropdownItem>

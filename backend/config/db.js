@@ -22,6 +22,20 @@ export const connectDB = async () => {
     });
 
     logger.info(`MongoDB connected: ${conn.connection.host}/${conn.connection.name}`);
+
+    // Drop legacy unique index on storage_key if present to support deduplication
+    try {
+      const filesCol = conn.connection.collection("files");
+      const indexes = await filesCol.indexes();
+      const storageKeyIndex = indexes.find((idx) => idx.name === "storage_key_1");
+      if (storageKeyIndex && storageKeyIndex.unique) {
+        await filesCol.dropIndex("storage_key_1");
+        logger.info("Dropped legacy unique index storage_key_1 to support file deduplication");
+      }
+    } catch {
+      // Ignore if collection does not exist yet or index already dropped
+    }
+
     return conn;
   } catch (error) {
     logger.error("MongoDB initial connection error:", {

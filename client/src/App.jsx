@@ -1,6 +1,7 @@
 import React from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import Dashboard from './pages/Dashboard'
 import Drive from './pages/Drive'
 import Login from './pages/Login'
 import Trash from './pages/Trash'
@@ -19,9 +20,10 @@ const App = () => {
       <Route path='/forgot-password' element={<Login mode="forgot"/>}/>
       <Route path='/reset-password/:token' element={<Login mode="reset"/>}/>
       <Route path='/s/:token' element={<SharedFile/>}/>
-      {/* Private Routes */}
+      {/* Private Authenticated Routes */}
       <Route element={<ProtectedRoute/>}>
         <Route element={<DashboardLayout/>}>
+          <Route path='/dashboard' element={<Dashboard/>}/>
           <Route path='/' element={<Drive/>}/>
           <Route path='/trash' element={<Trash/>}/>
           <Route path='/shared' element={<SharedWithMe/>}/>

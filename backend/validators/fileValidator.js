@@ -28,8 +28,11 @@ export const validateRequestUploadUrl = (req) => {
     });
   }
 
+  const MIME_REGEX = /^[a-zA-Z0-9!#$&^_.+-]+\/[a-zA-Z0-9!#$&^_.+-]+$/;
   if (!mime_type || typeof mime_type !== "string" || !mime_type.trim()) {
     errors.push({ field: "mime_type", message: "Valid MIME type is required." });
+  } else if (!MIME_REGEX.test(mime_type.trim())) {
+    errors.push({ field: "mime_type", message: "Invalid MIME type format (expected type/subtype)." });
   }
 
   if (folder_id && !isValidObjectId(folder_id)) {
@@ -63,8 +66,11 @@ export const validateConfirmUpload = (req) => {
     errors.push({ field: "size", message: "Valid positive file size in bytes is required." });
   }
 
+  const MIME_REGEX = /^[a-zA-Z0-9!#$&^_.+-]+\/[a-zA-Z0-9!#$&^_.+-]+$/;
   if (!mime_type || typeof mime_type !== "string" || !mime_type.trim()) {
     errors.push({ field: "mime_type", message: "Valid MIME type is required." });
+  } else if (!MIME_REGEX.test(mime_type.trim())) {
+    errors.push({ field: "mime_type", message: "Invalid MIME type format (expected type/subtype)." });
   }
 
   if (folder_id && !isValidObjectId(folder_id)) {
