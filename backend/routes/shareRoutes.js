@@ -4,13 +4,17 @@ import {
   createShare,
   revokeShare,
   accessSharedResource,
+  downloadSharedResource,
 } from "../controllers/shareController.js";
 import { protect } from "../middleware/auth.js";
 
 const router = Router();
 
-// Public route for shared link recipients
+// Public routes for shared link recipients
 router.get("/access/:token", accessSharedResource);
+router.post("/access/:token", accessSharedResource);
+router.get("/access/:token/download", downloadSharedResource);
+router.post("/access/:token/download", downloadSharedResource);
 
 // Protected routes for managing user's share links
 router.use(protect);

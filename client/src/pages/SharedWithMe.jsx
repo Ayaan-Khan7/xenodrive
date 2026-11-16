@@ -109,9 +109,25 @@ const SharedWithMe = () => {
                         {share.resource_type || "file"}
                       </span>
                       <span>·</span>
-                      <span>{share.permission || "download"}</span>
+                      <span className="capitalize">{share.permission === "view" ? "Read-Only" : "Download Allowed"}</span>
                       <span>·</span>
                       <span>{share.access_count || 0} views</span>
+                      <span>·</span>
+                      <span>{share.download_count || 0} downloads</span>
+                      {share.has_password && (
+                        <>
+                          <span>·</span>
+                          <span className="text-emerald-600 font-medium">Protected</span>
+                        </>
+                      )}
+                      {share.expires_at && (
+                        <>
+                          <span>·</span>
+                          <span className="text-amber-600">
+                            Expires {new Date(share.expires_at).toLocaleDateString()}
+                          </span>
+                        </>
+                      )}
                       {resource.size && (
                         <>
                           <span>·</span>

@@ -7,7 +7,12 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node test-server.js && node test-auth.js",
+    "test": "node test-server.js && node test-auth.js && node test-drive.js && node test-dashboard.js && node test-sharing-versions.js && node test-advanced-features.js",
+    "test:drive": "node test-drive.js",
+    "test:dashboard": "node test-dashboard.js",
+    "test:sharing": "node test-sharing-versions.js",
+    "test:advanced": "node test-advanced-features.js",
+    "test:qa": "node test-comprehensive-qa.js",
     "test:r2": "node test-r2.js",
     "configure:cors": "node scripts/configureCors.js"
   },

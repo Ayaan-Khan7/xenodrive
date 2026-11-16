@@ -599,7 +599,9 @@ const mockAdapter = async (config) => {
     };
 };
 
-if (!import.meta.env.VITE_BASE_URL) {
+// Enable mock adapter ONLY in local development when no backend URL is specified.
+// In production, all calls MUST route to the live Render backend API.
+if (!import.meta.env.VITE_BASE_URL && import.meta.env.DEV) {
     api.defaults.adapter = mockAdapter;
 }
 

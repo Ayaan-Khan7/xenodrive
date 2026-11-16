@@ -3,6 +3,7 @@ import Folder from "../models/Folder.js";
 import File from "../models/File.js";
 import User from "../models/User.js";
 import { deleteObjectsFromR2 } from "../services/r2StorageService.js";
+import { logActivity } from "../utils/activityLogger.js";
 import { AppError } from "../utils/appError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { logger } from "../utils/logger.js";
@@ -105,6 +106,14 @@ export const createFolder = asyncHandler(async (req, res, next) => {
     is_trashed: false,
   });
 
+  await logActivity({
+    userId: req.user._id,
+    action: "create_folder",
+    resourceType: "folder",
+    resourceId: folder._id,
+    resourceName: folder.name,
+  });
+
   return res.status(201).json({
     success: true,
     folder,
@@ -130,6 +139,14 @@ export const renameFolder = asyncHandler(async (req, res, next) => {
 
   folder.name = name.trim();
   await folder.save();
+
+  await logActivity({
+    userId: req.user._id,
+    action: "rename",
+    resourceType: "folder",
+    resourceId: folder._id,
+    resourceName: folder.name,
+  });
 
   return res.status(200).json({
     success: true,
@@ -201,6 +218,14 @@ export const moveFolder = asyncHandler(async (req, res, next) => {
     }
   }
 
+  await logActivity({
+    userId: req.user._id,
+    action: "move",
+    resourceType: "folder",
+    resourceId: folder._id,
+    resourceName: folder.name,
+  });
+
   return res.status(200).json({
     success: true,
     folder,
@@ -247,6 +272,14 @@ export const trashFolder = asyncHandler(async (req, res, next) => {
     { is_trashed: true, trashed_at: now }
   );
 
+  await logActivity({
+    userId: req.user._id,
+    action: "delete",
+    resourceType: "folder",
+    resourceId: folder._id,
+    resourceName: folder.name,
+  });
+
   return res.status(200).json({
     success: true,
     message: "Folder and its contents moved to trash",
@@ -290,6 +323,14 @@ export const restoreFolder = asyncHandler(async (req, res, next) => {
     { is_trashed: false, trashed_at: null }
   );
 
+  await logActivity({
+    userId: req.user._id,
+    action: "restore",
+    resourceType: "folder",
+    resourceId: folder._id,
+    resourceName: folder.name,
+  });
+
   return res.status(200).json({
     success: true,
     folder,
@@ -325,23 +366,51 @@ export const permanentDeleteFolder = asyncHandler(async (req, res, next) => {
     folder_id: { $in: allFolderIds },
   });
 
-  // Delete all files from Cloudflare R2
+  // Delete all files from Cloudflare R2 (preserving keys referenced by other active files)
+  const fileIdsToDelete = filesToDelete.map((f) => f._id);
   const storageKeys = filesToDelete.map((f) => f.storage_key).filter(Boolean);
-  if (storageKeys.length > 0) {
-    await deleteObjectsFromR2(storageKeys);
+
+  const remainingFilesWithKeys = await File.find({
+    _id: { $nin: fileIdsToDelete },
+    storage_key: { $in: storageKeys },
+  }).select("storage_key");
+  const preservedKeys = new Set(remainingFilesWithKeys.map((f) => f.storage_key));
+  const uniqueKeysToDelete = storageKeys.filter((k) => !preservedKeys.has(k));
+
+  if (uniqueKeysToDelete.length > 0) {
+    await deleteObjectsFromR2(uniqueKeysToDelete);
   }
 
-  // Recalculate user storage consumption
-  const totalFreedBytes = filesToDelete.reduce((acc, f) => acc + (f.size || 0), 0);
+  // Recalculate user storage consumption accurately
+  await File.deleteMany({ _id: { $in: fileIdsToDelete } });
+  await Folder.deleteMany({ _id: { $in: allFolderIds } });
+
+  const remainingUserFiles = await File.find({
+    owner_id: req.user._id,
+    is_trashed: false,
+  });
+  const seenUserKeys = new Set();
+  let newStorageUsed = 0;
+  for (const f of remainingUserFiles) {
+    if (!seenUserKeys.has(f.storage_key)) {
+      seenUserKeys.add(f.storage_key);
+      newStorageUsed += f.size || 0;
+    }
+  }
+
   const user = await User.findById(req.user._id);
-  if (user && totalFreedBytes > 0) {
-    user.storage_used = Math.max(0, user.storage_used - totalFreedBytes);
+  if (user) {
+    user.storage_used = newStorageUsed;
     await user.save();
   }
 
-  // Delete files and folders from MongoDB
-  await File.deleteMany({ _id: { $in: filesToDelete.map((f) => f._id) } });
-  await Folder.deleteMany({ _id: { $in: allFolderIds } });
+  await logActivity({
+    userId: req.user._id,
+    action: "permanent_delete",
+    resourceType: "folder",
+    resourceId: folder._id,
+    resourceName: folder.name,
+  });
 
   logger.info(
     `Permanently deleted folder ${folder.name} (${allFolderIds.length} folders, ${filesToDelete.length} files, freed ${totalFreedBytes} bytes)`
