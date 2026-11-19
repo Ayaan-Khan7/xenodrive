@@ -1,6 +1,16 @@
 import mongoose from "mongoose";
+import dns from "dns";
 import { env } from "./env.js";
 import { logger } from "../utils/logger.js";
+
+// Ensure resilient SRV record resolution across all network providers
+if (env.MONGODB_URI.startsWith("mongodb+srv://")) {
+  try {
+    dns.setServers(["8.8.8.8", "1.1.1.1"]);
+  } catch {
+    // Ignore if system restricts dns.setServers
+  }
+}
 
 /**
  * MongoDB connection states mapping
