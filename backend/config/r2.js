@@ -9,14 +9,15 @@ let r2Client = null;
 
 if (env.isR2Configured) {
   r2Client = new S3Client({
-    region: "auto",
-    endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    region: env.R2_REGION || "auto",
+    endpoint: env.R2_ENDPOINT || `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: {
       accessKeyId: env.R2_ACCESS_KEY_ID,
       secretAccessKey: env.R2_SECRET_ACCESS_KEY,
     },
+    forcePathStyle: true,
   });
-  logger.info("Cloudflare R2 Client initialized successfully.");
+  logger.info(`S3-compatible Object Storage Client initialized successfully (Endpoint: ${env.R2_ENDPOINT || env.R2_ACCOUNT_ID}).`);
 } else {
   logger.warn(
     "Cloudflare R2 credentials not fully provided in environment variables. Object storage calls will require R2 configuration."
