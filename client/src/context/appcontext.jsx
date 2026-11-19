@@ -2,7 +2,13 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import toast from "react-hot-toast";
 import api from "../config/api";
 const AppContext = createContext();
-const getErrMsg=(err, fallback)=>err?.response?.data?.error || fallback ;
+const getErrMsg = (err, fallback) => {
+    const details = err?.response?.data?.details;
+    if (Array.isArray(details) && details.length > 0) {
+        return details.map((d) => d.message).join(" ");
+    }
+    return err?.response?.data?.error || fallback;
+};
 
 export const AppProvider = ({ children }) => {
     const[user,setUser]=useState(null);

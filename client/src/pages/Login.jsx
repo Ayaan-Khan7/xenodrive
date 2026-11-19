@@ -28,6 +28,18 @@ const Login = ({ mode = "login" }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (isRegister) {
+            if (!form.name || form.name.trim().length < 2) {
+                toast.error("Full name must be at least 2 characters.");
+                return;
+            }
+            if (!form.password || form.password.length < 6) {
+                toast.error("Password must be at least 6 characters.");
+                return;
+            }
+        }
+
         setIsLoading(true);
 
         try {
@@ -40,9 +52,12 @@ const Login = ({ mode = "login" }) => {
                     setResetLinkSent(true);
                 }
             } else if (isReset) {
+                if (!form.password || form.password.length < 6) {
+                    toast.error("Password must be at least 6 characters.");
+                    return;
+                }
                 if (form.password !== form.confirmPassword) {
                     toast.error("Passwords do not match");
-                    setIsLoading(false);
                     return;
                 }
                 const ok = await resetPassword(token, form.password);
@@ -143,7 +158,8 @@ const Login = ({ mode = "login" }) => {
                                     label={isReset ? "New Password" : "Password"}
                                     type="password"
                                     icon={Lock}
-                                    placeholder="••••••••"
+                                    placeholder={isRegister || isReset ? "At least 6 characters" : "••••••••"}
+                                    minLength={isRegister || isReset ? 6 : undefined}
                                     value={form.password}
                                     onChange={(e) => updateField("password", e.target.value)}
                                     required
