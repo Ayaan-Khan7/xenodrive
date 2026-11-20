@@ -1,7 +1,7 @@
 # CloudVault (xenoDrive) ☁️🔒
 
 > **Enterprise-Grade Cloud Storage & Secure File Collaboration Platform**  
-> Built with React 19, Tailwind CSS, Node.js, Express, MongoDB Atlas, and S3-Compatible Cloud Object Storage (Supabase S3 / Cloudflare R2).  
+> Built with React 19, Tailwind CSS, Node.js, Express, MongoDB Atlas, and S3-Compatible Cloud Object Storage (Supabase S3 ).  
 > 100% Free-Tier Architecture ($0/month) with direct client-to-storage presigned uploads, client-side SHA-256 deduplication, file versioning, and end-to-end audit logging.
 
 **🌐 Live Demo:** [https://xenodrive-swart.vercel.app](https://xenodrive-swart.vercel.app)  
@@ -63,7 +63,7 @@ sequenceDiagram
 ## 🚀 Key Features
 
 ### 1. Direct Presigned Object Storage
-- **Direct Browser-to-Storage Uploads:** Streams files directly from client to S3-compatible cloud object storage (Supabase S3 / Cloudflare R2) via presigned PUT URLs generated using the AWS SDK for JavaScript v3.
+- **Direct Browser-to-Storage Uploads:** Streams files directly from client to S3-compatible cloud object storage (Supabase S3 ) via presigned PUT URLs generated using the AWS SDK for JavaScript v3.
 - **Zero Backend Bandwidth Bottleneck:** The backend server handles lightweight JSON metadata operations only.
 - **Reference-Counted Object Deletion:** Physical cloud storage objects are safely retained when deduplicated copies exist and only pruned when the last reference is permanently deleted.
 
@@ -111,7 +111,7 @@ sequenceDiagram
 | **Frontend** | React 19, Vite, Tailwind CSS v4, Lucide React, React Router v7, React Hot Toast, Axios |
 | **Backend** | Node.js (v20+), Express.js, Helmet, CORS, Express Rate Limit, Cookie Parser, Winston |
 | **Database** | MongoDB Atlas (M0 Free Tier), Mongoose ODM |
-| **Storage** | S3-Compatible Cloud Storage (Supabase S3 / Cloudflare R2), `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` |
+| **Storage** | S3-Compatible Cloud Storage (Supabase S3 ), `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` |
 | **Authentication** | JWT (JSON Web Tokens), Bcrypt.js (12 salt rounds), HTTP-Only Cookies (SameSite=None, Secure=true) |
 
 ---
@@ -181,7 +181,7 @@ xenodrive/
 ### Prerequisites
 - Node.js (v20.x or higher)
 - MongoDB installed locally OR free MongoDB Atlas connection string
-- S3-compatible storage credentials (Supabase S3 or Cloudflare R2)
+- S3-compatible storage credentials (Supabase S3 )
 - npm / pnpm
 
 ### 1. Clone Repository
