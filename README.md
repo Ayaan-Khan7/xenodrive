@@ -1,8 +1,11 @@
 # CloudVault (xenoDrive) ☁️🔒
 
 > **Enterprise-Grade Cloud Storage & Secure File Collaboration Platform**  
-> Built with React 19, Tailwind CSS, Node.js, Express, MongoDB Atlas, and Cloudflare R2 Object Storage.  
+> Built with React 19, Tailwind CSS, Node.js, Express, MongoDB Atlas, and S3-Compatible Cloud Object Storage (Supabase S3 / Cloudflare R2).  
 > 100% Free-Tier Architecture ($0/month) with direct client-to-storage presigned uploads, client-side SHA-256 deduplication, file versioning, and end-to-end audit logging.
+
+**🌐 Live Demo:** [https://xenodrive-swart.vercel.app](https://xenodrive-swart.vercel.app)  
+**⚡ Backend API:** [https://cloudvault-backend-kmzh.onrender.com](https://cloudvault-backend-kmzh.onrender.com)
 
 ---
 
@@ -30,7 +33,7 @@ sequenceDiagram
     actor User as Client Browser
     participant API as Express Backend (Render Free)
     participant DB as MongoDB Atlas (M0 Free)
-    participant R2 as Cloudflare R2 (S3 API Free)
+    participant S3 as S3 Object Storage (Supabase S3 / R2)
 
     Note over User,API: 1. Pre-Flight & Duplicate Check
     User->>User: Compute SHA-256 Hash (Web Crypto API)
@@ -44,12 +47,12 @@ sequenceDiagram
     else Unique File
         API->>API: Generate S3 Presigned PUT URL (1-hour expiration)
         API-->>User: 200 OK { uploadUrl, storage_key }
-        Note over User,R2: 2. Direct Binary Stream
-        User->>R2: Direct HTTP PUT (File Bytes via Presigned URL)
-        R2-->>User: 200 OK (Uploaded directly to R2 bucket)
+        Note over User,S3: 2. Direct Binary Stream
+        User->>S3: Direct HTTP PUT (File Bytes via Presigned URL)
+        S3-->>User: 200 OK (Uploaded directly to S3 bucket)
         Note over User,API: 3. Confirmation & Indexing
         User->>API: POST /api/files/confirm-upload { storage_key, name, size, mime }
-        API->>R2: HeadObject / Extract Plaintext Excerpt (max 64KB)
+        API->>S3: HeadObject / Extract Plaintext Excerpt (max 64KB)
         API->>DB: Save File record, update user.storage_used, log Activity
         API-->>User: 201 Created { file }
     end
@@ -60,9 +63,9 @@ sequenceDiagram
 ## 🚀 Key Features
 
 ### 1. Direct Presigned Object Storage
-- **Direct Browser-to-R2 Uploads:** Streams files directly from client to Cloudflare R2 via presigned PUT URLs generated using the AWS SDK for JavaScript v3.
+- **Direct Browser-to-Storage Uploads:** Streams files directly from client to S3-compatible cloud object storage (Supabase S3 / Cloudflare R2) via presigned PUT URLs generated using the AWS SDK for JavaScript v3.
 - **Zero Backend Bandwidth Bottleneck:** The backend server handles lightweight JSON metadata operations only.
-- **Reference-Counted Object Deletion:** Physical R2 files are safely retained when deduplicated copies exist and only pruned when the last reference is permanently deleted.
+- **Reference-Counted Object Deletion:** Physical cloud storage objects are safely retained when deduplicated copies exist and only pruned when the last reference is permanently deleted.
 
 ### 2. Client-Side SHA-256 Duplicate Detection
 - **Web Crypto Hashing:** Computes SHA-256 hashes client-side using chunked streaming before uploading bytes.
@@ -89,7 +92,7 @@ sequenceDiagram
 - **Version Pruning:** Delete stale versions to reclaim allocated quota.
 
 ### 6. Storage Analytics & Live Audit Logs
-- **Visual Storage Meter:** Real-time capacity breakdown against the 1 GB default quota.
+- **Visual Storage Meter:** Real-time capacity breakdown against the quota limit.
 - **File Type Distribution:** Dynamic category breakdown (Documents, Images, Videos, Audio, Archives).
 - **7-Day Ingestion Trend:** Visual activity bar chart representing daily uploaded bytes.
 - **Top Largest Files:** Quick-access list identifying top storage consumers.
@@ -97,7 +100,7 @@ sequenceDiagram
 
 ### 7. Search & Plaintext Document Indexing
 - **Multi-Field Filtering:** Search by filename, file category, folder scope (Current vs All Folders), and upload date range.
-- **Extracted Document Content Search:** Genuine plaintext extraction from `.txt`, `.md`, `.csv`, `.json`, `.js`, etc., indexed in MongoDB with `matched_in_content` indicators. Zero paid APIs or misleading AI claims.
+- **Extracted Document Content Search:** Genuine plaintext extraction from `.txt`, `.md`, `.csv`, `.json`, `.js`, etc., indexed in MongoDB with `matched_in_content` indicators. Zero paid APIs or external dependencies.
 
 ---
 
@@ -108,8 +111,8 @@ sequenceDiagram
 | **Frontend** | React 19, Vite, Tailwind CSS v4, Lucide React, React Router v7, React Hot Toast, Axios |
 | **Backend** | Node.js (v20+), Express.js, Helmet, CORS, Express Rate Limit, Cookie Parser, Winston |
 | **Database** | MongoDB Atlas (M0 Free Tier), Mongoose ODM |
-| **Storage** | Cloudflare R2 (S3-Compatible API), `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` |
-| **Authentication** | JWT (JSON Web Tokens), Bcrypt.js, HTTP-Only Cookies (SameSite=None, Secure=true) |
+| **Storage** | S3-Compatible Cloud Storage (Supabase S3 / Cloudflare R2), `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` |
+| **Authentication** | JWT (JSON Web Tokens), Bcrypt.js (12 salt rounds), HTTP-Only Cookies (SameSite=None, Secure=true) |
 
 ---
 
@@ -120,7 +123,7 @@ sequenceDiagram
 | **Frontend Hosting** | Vercel Hobby | Unlimited bandwidth, 100 GB-hours edge execution | **$0.00** |
 | **Backend API** | Render Free | 512 MB RAM, 0.1 CPU, 750 free instance hours/month | **$0.00** |
 | **Database** | MongoDB Atlas M0 | 512 MB shared RAM/storage, 500 connections | **$0.00** |
-| **Object Storage** | Cloudflare R2 | 10 GB storage, 1M Class A ops/mo, 10M Class B ops/mo, $0 egress | **$0.00** |
+| **Object Storage** | Supabase Storage / Cloudflare R2 | S3-compatible API, 1 GB to 10 GB free storage, $0 egress | **$0.00** |
 | **DNS & SSL** | Cloudflare / Vercel | Free universal SSL/TLS certificates | **$0.00** |
 
 ---
@@ -137,13 +140,13 @@ xenodrive/
 ├── API_DOCUMENTATION.md           # REST API specification
 │
 ├── backend/                       # Express & Node.js API Service
-│   ├── config/                    # Environment, Database, & CORS configurations
+│   ├── config/                    # Environment, Database, & S3/CORS configurations
 │   ├── controllers/               # Route controllers (Auth, Files, Folders, Shares, etc.)
 │   ├── middleware/                # Auth guards, Rate limiters, Error & Request loggers
 │   ├── models/                    # Mongoose schemas (User, File, Folder, Share, Version, Log)
 │   ├── routes/                    # Express API route modules
 │   ├── scripts/                   # Database & CORS maintenance scripts
-│   ├── services/                  # Cloudflare R2 Storage & Health services
+│   ├── services/                  # S3 Object Storage & Health services
 │   ├── utils/                     # JWT tokens, AppError, ApiResponse, Activity logger
 │   ├── validators/                # Request validation schemas
 │   ├── .env.example               # Backend environment variables template
@@ -178,6 +181,7 @@ xenodrive/
 ### Prerequisites
 - Node.js (v20.x or higher)
 - MongoDB installed locally OR free MongoDB Atlas connection string
+- S3-compatible storage credentials (Supabase S3 or Cloudflare R2)
 - npm / pnpm
 
 ### 1. Clone Repository
@@ -190,7 +194,7 @@ cd xenodrive
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env with your MongoDB URI and secret keys
+# Edit .env with your MongoDB URI and S3 storage keys
 npm install
 npm run dev
 # Backend starts on http://localhost:5000
@@ -230,13 +234,13 @@ npm test
 
 ## 🚢 Deployment Guide
 
-For full production deployment instructions on Vercel, Render, MongoDB Atlas, and Cloudflare R2, see [DEPLOYMENT.md](file:///c:/Users/User/OneDrive/Desktop/xenodrive/DEPLOYMENT.md).
+For full production deployment instructions on Vercel, Render, MongoDB Atlas, and Supabase S3 / Cloudflare R2, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ---
 
 ## 📖 API Documentation
 
-For the complete REST API specification including parameters, status codes, and sample payloads, see [API_DOCUMENTATION.md](file:///c:/Users/User/OneDrive/Desktop/xenodrive/API_DOCUMENTATION.md).
+For the complete REST API specification including parameters, status codes, and sample payloads, see [API_DOCUMENTATION.md](API_DOCUMENTATION.md).
 
 ---
 
@@ -244,6 +248,6 @@ For the complete REST API specification including parameters, status codes, and 
 
 - **Zero Secret Exposure:** All credentials are kept in environment variables; `.gitignore` strictly rejects `.env` files across root, frontend, and backend.
 - **Cross-User Isolation:** Every database query enforces `{ owner_id: req.user._id }` or active share validation, guaranteeing zero data leakage between accounts.
-- **Direct Streaming to R2:** The application server never stores client file binaries on temporary disk.
+- **Direct Streaming to S3 Object Storage:** The application server never stores client file binaries on temporary disk.
 - **SameSite=None & Secure Cookies:** Strict HTTPS-only cross-origin session cookies for decoupled production domains.
 - **Rate Limiting & Helmet:** Global API request rate limiting with Helmet security headers (HSTS, CSP, Frameguard).

@@ -1,7 +1,7 @@
 # CloudVault (xenoDrive) Production Deployment Guide 🚀
 
-> **Target Stack:** Vercel Hobby (Frontend) + Render Free (Backend) + MongoDB Atlas M0 (Database) + Cloudflare R2 Free (Storage) + GitHub  
-> **Total Monthly Cost:** **$0.00 / month (100% Free Tier)**
+> **Target Stack:** Vercel Hobby (Frontend) + Render Free (Backend) + MongoDB Atlas M0 (Database) + S3 Object Storage (Supabase S3 Free) + GitHub  
+> **Total Monthly Cost:** **$0.00 / month (100% Free Tier - Zero Credit Card Required)**
 
 ---
 
@@ -13,12 +13,13 @@ Before deploying, ensure you have active accounts on each provider. All services
 | :--- | :--- | :--- | :--- |
 | **GitHub** | Source Control & Git CI/CD | Unlimited public/private repositories | No card required |
 | **MongoDB Atlas** | Managed Database (M0) | 512 MB storage, shared RAM, 500 connections | No card required |
-| **Cloudflare** | R2 Object Storage | 10 GB storage, 1M Class A ops, 10M Class B ops/mo, $0 egress | Card verification required by Cloudflare to enable R2 ($0 charge) |
+| **Supabase Storage** | S3-Compatible Cloud Storage | 1 GB storage, S3 Presigned URLs, $0 egress | **No card required** |
+| **Cloudflare R2** | Optional Alternative S3 Storage | 10 GB storage, $0 egress | Card verification required for signup ($0 charge) |
 | **Render** | Backend Node.js API hosting | 512 MB RAM, 0.1 CPU, 750 free instance hours/month | No card required |
 | **Vercel** | Frontend React SPA hosting | 100 GB bandwidth, unlimited preview deployments | No card required |
 
-> [!NOTE]
-> **Cloudflare R2 Billing Note:** Cloudflare requires adding a payment method to verify identity before provisioning an R2 bucket. However, **you will not be charged** as long as your usage stays under 10 GB storage and 1,000,000 write operations per month. CloudVault includes built-in duplicate detection and 1 GB per-user quotas to ensure you stay well within this threshold.
+> [!TIP]
+> **Zero-Card Setup (Recommended):** Use **Supabase Storage** for S3-compatible cloud storage. It requires **zero credit or debit card details** and gives you 1 GB of free storage. If you want 10 GB free, you can alternatively use Cloudflare R2.
 
 ---
 
