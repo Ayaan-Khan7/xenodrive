@@ -177,7 +177,7 @@ Retrieve real-time user statistics, storage metrics, file type distribution, 7-d
 ### Direct R2 Upload Flow
 
 1. **Client requests upload URL** -> Backend validates quota and checks SHA-256 for duplicates.
-2. **Client uploads file binary directly to Cloudflare R2** via HTTP PUT.
+2. **Client uploads file binary directly to S3 Cloud Object Storage (Supabase S3 / Cloudflare R2)** via HTTP PUT.
 3. **Client confirms upload with Backend** -> Backend validates object existence, indexes metadata, and logs activity.
 
 ### `POST /api/files/request-upload-url`
@@ -316,7 +316,7 @@ Restore file from Trash.
 - **Access:** Private
 
 ### `DELETE /api/files/:id/permanent`
-Permanently purge file from MongoDB and Cloudflare R2 (reference-counted).
+Permanently purge file from MongoDB and S3 Object Storage (reference-counted).
 - **Access:** Private
 
 ---

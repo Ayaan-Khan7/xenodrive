@@ -256,7 +256,7 @@ const Dashboard = () => {
             <span>{formatBytes(stats?.storage_limit || 0)} limit</span>
           </div>
           <p className="text-xs text-slate-400 border-t border-slate-100 pt-3">
-            Enterprise cloud storage powered by Cloudflare R2 S3 API.
+            Enterprise cloud storage powered by S3-Compatible Object Storage.
           </p>
         </div>
 
